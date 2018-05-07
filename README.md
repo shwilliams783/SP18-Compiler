@@ -1,23 +1,29 @@
 # SP18-Compiler
 Compiles programs written in .sp18 language to Virtual Assembly (.asm) programs
 
-# Not Fully Operational - Local variable scoping needed, but procedural logic works
+Local Variables - comp
 
-Local Variables - statSem
-
-statSem reads a file from the command line to be scanned into tokens by
+comp reads a file from the command line to be scanned into tokens by
 parser(), which will produce a parse tree for the back end. After parser()
-makes the parse tree, statSem() will validate static semantics, particularly
-variable allocation and scoping.
+makes the parse tree, firstPass() will validate static semantics, and generate
+virtual assembly code, resulting in a .asm file translated from the original
+.sp18 file.
 
 Usage: 
-	./statSem P3_test1
+	<code>./comp P4_test1</code>
 or:
-	./statSem < P3_test1.sp18
+	<code>./comp < P4_test1.sp18</code>
 
-Future projects will utilize the parse tree and static semantics created by
-statSem to create the intermediate code (pseudo-Assembly) on the back end.
+semantics.c and semantics.h
 
+These source and header files are modified versions of statSem.c and statSem.h,
+adding code generation in a single pass with local variable scoping. Program
+statements, temporary variables and labels are generated for the .asm file.
+	
+	
+*******************************Previous Versions*******************************
+	
+	
 statSem.c and statSem.h
 
 These source and header files utilize traversePostOrder(), push(), pop(),
@@ -35,7 +41,7 @@ the varStack.
 statSemError() is used for error reporting. 
 
 
-*******************************Previous Versions*******************************
+
 
 parser.c, parser.h and node.h
 
