@@ -28,7 +28,7 @@ void push(std::string str)
 	if(tos < STACKMAX)
 	{
 		varStack[tos] = str;
-		output <<"PUSH "<<std::endl;
+		//output <<"PUSH "<<std::endl;
 		tos++;		
 	}
 	// Stack Overflow Error
@@ -46,7 +46,7 @@ void pop()
 	varStack[tos] = "";
 	if(tos > 0)
 	{
-		output <<"POP "<<std::endl;
+		//output <<"POP "<<std::endl;
 		// Decrement tos
 		tos--;
 	}
@@ -61,7 +61,7 @@ int find(std::string str)
 	// Default to -1, (not found)
 	int result = -1;
 	int i;
-	for(i = tos; i >= 0; i--)
+	for(i = tos-1; i >= 0; i--)
 	{
 		// If the provided string matches the ith value of varStack
 		if(str.compare(varStack[i]) == 0)
@@ -131,6 +131,7 @@ void firstPass(node_t* root)
 			else
 			{
 				push(root->tokens[0].str);
+				output<<"PUSH "<<std::endl;
 				varCount++;
 			}
 		}
@@ -142,20 +143,36 @@ void firstPass(node_t* root)
 		// Store find once, rather than repeating the search - more optimized
 		int found = find(root->tokens[0].str);
 		
+		std::cout<<"<RND> entered, found = "<<found<<", varCount = "<<varCount<<", tos = "<<tos<<", variable = "<<root->tokens[0].str<<std::endl; // REMOVE AFTER DEBUGGING
+		
 		// IDTK found locally
 		if(found <= varCount && found >= 0)
 		{
+			std::cout<<"\tLocal variable found: "<<root->tokens[0].str<<std::endl; // REMOVE AFTER DEBUGGING
 			output<<"STACKR "<<found<<std::endl;
 		}
 
 		// IDTK found globally
 		else if(found >= 0)
 		{
+			std::cout<<"\tGlobal variable found: "<<root->tokens[0].str<<std::endl; // REMOVE AFTER DEBUGGING
+			output<<"LOAD "<<root->tokens[0].str<<std::endl;
 			//output<<"STACKR "<<found<<std::endl;
 		}
 		
-		// <R> contains int or nothing -> (<expr>)
-		else if(root->tokens[0].id == IntTK || root->tokens[0].str.compare("NULL") == 0);
+		// <R> contains int
+		else if(root->tokens[0].id == IntTK && root->tokens[0].str.compare("NULL") != 0)
+		{
+			std::cout<<"\tInteger variable found: "<<root->tokens[0].str<<std::endl; // REMOVE AFTER DEBUGGING
+			output<<"LOAD "<<root->tokens[0].str<<std::endl;
+		}		
+		
+		// <R> contains (<expr>)
+		else if(root->tokens[0].str.compare("NULL") == 0)
+		{
+			std::cout<<"\tContains (<expr>) "<<std::endl; // REMOVE AFTER DEBUGGING
+			firstPass(root->child0);
+		}
 		
 		// Undeclared variable usage
 		else
@@ -171,7 +188,7 @@ void firstPass(node_t* root)
 		// IDTK found locally
 		if(found <= varCount && found >= 0)
 		{
-			output<<"STACKW "<<found<<std::endl;
+			output<<"STACKW "<<found-1<<std::endl;
 		}
 
 		// IDTK found globally
@@ -206,14 +223,16 @@ void firstPass(node_t* root)
 			ss<<"T";
 			ss<<tempNo;
 			tempVar[tempNo] = ss.str();
-			push(ss.str());
-			varCount++;
+			//push(ss.str()); //TEMPORARY REMOVAL
+			//varCount++;
 			// READ T#
 			output<<"READ "<<ss.str()<<std::endl;
 			// LOAD T#
 			output<<"LOAD "<<ss.str()<<std::endl;
+			//pop(); // TESTING
 			// STACKW found
 			output<<"STACKW "<<found<<std::endl;
+			
 		}
 
 		// IDTK found globally
@@ -245,14 +264,15 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
 		firstPass(root->child0);
 		// ADD T#		
 		output<<"ADD "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		//std::cout<<tempVar[tempNo]<<std::endl; // REMOVE AFTER DEBUGGING
 	}
 	
@@ -268,14 +288,15 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
 		firstPass(root->child0);
 		// ADD T#		
 		output<<"SUB "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		//std::cout<<tempVar[tempNo]<<std::endl; // REMOVE AFTER DEBUGGING
 	}
 	
@@ -291,14 +312,15 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
 		firstPass(root->child0);
 		// ADD T#		
 		output<<"DIV "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		//std::cout<<tempVar[tempNo]<<std::endl; // REMOVE AFTER DEBUGGING
 	}
 	
@@ -314,14 +336,15 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
 		firstPass(root->child0);
 		// ADD T#		
 		output<<"MULT "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		//std::cout<<tempVar[tempNo]<<std::endl; // REMOVE AFTER DEBUGGING
 	}
 	
@@ -363,14 +386,15 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call first child
 		firstPass(root->child0);
 		// Subtract from T#
 		output<<"SUB "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		// Create new label
 		int labelNo = labelCount;
 		std::stringstream ll;
@@ -420,10 +444,10 @@ void firstPass(node_t* root)
 	{
 		// Create new label for out loop
 		int labelNoIn = labelCount;
-		std::stringstream ll;
+		std::stringstream mm;
 		labelCount++;
-		ll<<"L";
-		ll<<labelNoIn;
+		mm<<"L";
+		mm<<labelNoIn;
 		// Create new label for in loop
 		int labelNoOut = labelCount;
 		std::stringstream tt;
@@ -441,52 +465,53 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call first child
 		firstPass(root->child0);
 		// Subtract from T#
 		output<<"SUB "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		// Print BR statement for out
 		// Less than (<)
 		if(root->child1->type == ltND)
 		{
-			output<<"BRZPOS "<<ll.str()<<std::endl;
+			output<<"BRZPOS "<<mm.str()<<std::endl;
 		}
 		// Less than or equal to (<=)
 		if(root->child1->type == leND)
 		{
-			output<<"BRPOS "<<ll.str()<<std::endl;
+			output<<"BRPOS "<<mm.str()<<std::endl;
 		}
 		// Greater than (>)
 		if(root->child1->type == gtND)
 		{
-			output<<"BRZNEG "<<ll.str()<<std::endl;
+			output<<"BRZNEG "<<mm.str()<<std::endl;
 		}
 		// Greater than or equal to (>=)
 		if(root->child1->type == geND)
 		{
-			output<<"BRNEG "<<ll.str()<<std::endl;
+			output<<"BRNEG "<<mm.str()<<std::endl;
 		}
 		// Equal to (==)
 		if(root->child1->type == eqeqND)
 		{
-			output<<"BRZERO "<<ll.str()<<std::endl;
+			output<<"BRZERO "<<mm.str()<<std::endl;
 		}
 		// Not equal to (=)
 		if(root->child1->type == eqND)
 		{
-			output<<"BRNEG "<<ll.str()<<std::endl;
-			output<<"BRPOS "<<ll.str()<<std::endl;
+			output<<"BRNEG "<<mm.str()<<std::endl;
+			output<<"BRPOS "<<mm.str()<<std::endl;
 		}
 		// Call fourth child
 		firstPass(root->child3);
 		// BR back to in loop
 		output<<"BR "<<tt.str()<<std::endl;
 		// Print L# for out loop
-		output<<ll.str()<<": NOOP"<<std::endl;		
+		output<<mm.str()<<": NOOP"<<std::endl;		
 	}
 	
 	
@@ -530,10 +555,11 @@ void firstPass(node_t* root)
 		ss<<"T";
 		ss<<tempNo;
 		tempVar[tempNo] = ss.str();
-		push(ss.str());
-		varCount++;
+		//push(ss.str()); //TEMPORARY REMOVAL
+		//varCount++;
 		output<<"STORE "<<ss.str()<<std::endl;
 		output<<"WRITE "<<ss.str()<<std::endl;
+		//pop(); // TESTING
 		//std::cout<<tempVar[tempNo]<<std::endl; // REMOVE AFTER DEBUGGING
 	}
 	
@@ -541,8 +567,11 @@ void firstPass(node_t* root)
 	if(root->type == blocND)
 	{
 		// Pop() varCount variables off of the varStack
-		for(i = 0; i <= varCount; i++)
+		for(i = 0; i < varCount; i++)
+		{
 			pop();
+			output<<"POP "<<std::endl;
+		}
 
 		// Reset varCount to previousVarCount before closing <block>
 		varCount = previousVarCount;
@@ -556,9 +585,13 @@ void firstPass(node_t* root)
 		{
 			output<<tempVar[i]<<" 0"<<std::endl;
 		}
-		for(i = tos; i >= 0; i--)
+		for(i = 0; i < varCount; i++)
 		{
-			output<<varStack[i]<<" 0"<<std::endl;
+			std::cout<<"varStack[i].compare("") = "<<varStack[i].compare("")<<", varStack[i] = "<<varStack[i]<<std::endl; // REMOVE AFTER DEBUGGING
+			if(varStack[i].compare("") != 0)
+			{
+				output<<varStack[i]<<" 0"<<std::endl;
+			}
 		}
 	}
 }
