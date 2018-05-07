@@ -11,7 +11,7 @@
 
 std::string varStack[101]; // Variable Stack
 int tos = 0; // Top of Stack
-//static std::string tempVar[101]; // Temporary Variables
+static std::string tempVar[101]; // Temporary Variables
 static int tempCount = 0;
 //static std::string label[101]; // Labels
 static int labelCount = 0;
@@ -28,7 +28,7 @@ void push(std::string str)
 	if(tos < STACKMAX)
 	{
 		varStack[tos] = str;
-		//output <<"PUSH "<<std::endl;
+		output <<"PUSH "<<std::endl;
 		tos++;		
 	}
 	// Stack Overflow Error
@@ -46,7 +46,7 @@ void pop()
 	varStack[tos] = "";
 	if(tos > 0)
 	{
-		//output <<"POP "<<std::endl;
+		output <<"POP "<<std::endl;
 		// Decrement tos
 		tos--;
 	}
@@ -136,14 +136,92 @@ void firstPass(node_t* root)
 		}
 	}
 	
-	// Variable Usage: <R>, <in>, or <assign> open
-	if(root->type == RND || root->type == inND || root->type == asgnND)
+	// Variable Usage (read access): <R> open
+	if(root->type == RND)
 	{
+		// Store find once, rather than repeating the search - more optimized
+		int found = find(root->tokens[0].str);
+		
 		// IDTK found locally
-		if(find(root->tokens[0].str) < varCount && find(root->tokens[0].str) >= 0);
+		if(found <= varCount && found >= 0)
+		{
+			output<<"STACKR "<<found<<std::endl;
+		}
 
 		// IDTK found globally
-		else if(find(root->tokens[0].str) >= 0);
+		else if(found >= 0)
+		{
+			//output<<"STACKR "<<found<<std::endl;
+		}
+		
+		// <R> contains int or nothing -> (<expr>)
+		else if(root->tokens[0].id == IntTK || root->tokens[0].str.compare("NULL") == 0);
+		
+		// Undeclared variable usage
+		else
+			semError(3);
+	}
+	
+	// Variable Usage (write access): <assign> open
+	if(root->type == asgnND)
+	{
+		// Store find once, rather than repeating the search - more optimized
+		int found = find(root->tokens[0].str);
+		
+		// IDTK found locally
+		if(found <= varCount && found >= 0)
+		{
+			output<<"STACKW "<<found<<std::endl;
+		}
+
+		// IDTK found globally
+		else if(found >= 0)
+		{
+			//output<<"STACKW "<<found<<std::endl;
+		}
+		
+		// <R> contains int or nothing -> (<expr>)
+		else if(root->tokens[0].id == IntTK || root->tokens[0].str.compare("NULL") == 0);
+		
+		// Undeclared variable usage
+		else
+			semError(3);
+	}
+	
+	// Variable Usage (write access): <in> open
+	if(root->type == inND)
+	{
+		// Store find once, rather than repeating the search - more optimized
+		int found = find(root->tokens[0].str);
+		std::cout<<"Variable = "<<root->tokens[0].str<<", found = "<<found<<", varCount = "<<varCount<<", tos = "<<tos<<std::endl; //REMOVE AFTER DEBUGGING
+		
+		// IDTK found locally
+		if(found <= varCount && found >= 0)
+		{
+			std::cout<<"Local Variable found!"<<std::endl; //REMOVE AFTER DEBUGGING
+			// Create new temp
+			int tempNo = tempCount;
+			std::stringstream ss;
+			tempCount++;
+			ss<<"T";
+			ss<<tempNo;
+			tempVar[tempNo] = ss.str();
+			push(ss.str());
+			varCount++;
+			// READ T#
+			output<<"READ "<<ss.str()<<std::endl;
+			// LOAD T#
+			output<<"LOAD "<<ss.str()<<std::endl;
+			// STACKW found
+			output<<"STACKW "<<found<<std::endl;
+		}
+
+		// IDTK found globally
+		else if(found >= 0)
+		{
+			std::cout<<"Global Variable found!"<<std::endl; //REMOVE AFTER DEBUGGING
+			output<<"READ "<<root->tokens[0].str<<std::endl;
+		}
 		
 		// <R> contains int or nothing -> (<expr>)
 		else if(root->tokens[0].id == IntTK || root->tokens[0].str.compare("NULL") == 0);
@@ -154,21 +232,6 @@ void firstPass(node_t* root)
 	}
 	
 	/***************************End Static Semantics**************************/
-	
-	// <R>
-	if(root->type == RND)
-	{
-		if(root->tokens[0].str.compare("NULL") != 0)
-		{
-			output<<"LOAD "<<root->tokens[0].str<<std::endl;
-		}
-	}
-	
-	// <in>
-	if(root->type == inND)
-	{
-		output<<"READ "<<root->tokens[0].str<<std::endl;
-	}
 	
 	// <expr>-><add>
 	if(root->type == addND)
@@ -181,8 +244,9 @@ void firstPass(node_t* root)
 		tempCount++;
 		ss<<"T";
 		ss<<tempNo;
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
@@ -203,8 +267,9 @@ void firstPass(node_t* root)
 		tempCount++;
 		ss<<"T";
 		ss<<tempNo;
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
@@ -225,8 +290,9 @@ void firstPass(node_t* root)
 		tempCount++;
 		ss<<"T";
 		ss<<tempNo;
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
@@ -247,8 +313,9 @@ void firstPass(node_t* root)
 		tempCount++;
 		ss<<"T";
 		ss<<tempNo;
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call left child
@@ -295,8 +362,9 @@ void firstPass(node_t* root)
 		tempCount++;
 		ss<<"T";
 		ss<<tempNo;
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call first child
@@ -372,8 +440,9 @@ void firstPass(node_t* root)
 		tempCount++;
 		ss<<"T";
 		ss<<tempNo;
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		// STORE T#
 		output<<"STORE "<<ss.str()<<std::endl;
 		// Call first child
@@ -460,9 +529,9 @@ void firstPass(node_t* root)
 		
 		ss<<"T";
 		ss<<tempNo;
-		//tempVar[tempNo] = ss.str();
+		tempVar[tempNo] = ss.str();
 		push(ss.str());
-		//varCount++;
+		varCount++;
 		output<<"STORE "<<ss.str()<<std::endl;
 		output<<"WRITE "<<ss.str()<<std::endl;
 		//std::cout<<tempVar[tempNo]<<std::endl; // REMOVE AFTER DEBUGGING
@@ -472,7 +541,7 @@ void firstPass(node_t* root)
 	if(root->type == blocND)
 	{
 		// Pop() varCount variables off of the varStack
-		for(i = 0; i < varCount; i++)
+		for(i = 0; i <= varCount; i++)
 			pop();
 
 		// Reset varCount to previousVarCount before closing <block>
@@ -483,7 +552,11 @@ void firstPass(node_t* root)
 	if(root->type == progND)
 	{
 		output << "STOP\n";
-		for(i = tos-1; i >= 0; i--)
+		for(i = tempCount-1; i >= 0; i--)
+		{
+			output<<tempVar[i]<<" 0"<<std::endl;
+		}
+		for(i = tos; i >= 0; i--)
 		{
 			output<<varStack[i]<<" 0"<<std::endl;
 		}
